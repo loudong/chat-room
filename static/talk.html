@@ -1,0 +1,212 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8">
+	<title>聊天室</title>
+	<style>
+		*{
+			padding: 0;
+			margin: 0;
+		}
+		ul,li{
+			list-style: none;
+		}
+		span{
+			display: inline-block;
+		}
+		.wrap{
+			width: 60%;
+			margin: 50px auto;
+			position: relative;
+			padding: 10px;
+		}
+		.content{
+			height: 400px;
+			/* //border: 1px solid #ccc; */
+		}
+		.operate input[type='text']{
+			width: 70%;
+			height: 30px;
+		}
+		.operate input[type='button']{
+			width: 28%;
+			height: 30px;
+		}
+		#pop{
+			position: absolute;
+			left: 0;
+			width: 100%;
+			top: 0;
+			bottom: 0;
+			background-color: rgba(0,0,0,.5);
+		}
+		.inputContent{
+			width: 100%;
+			height: 40px;
+			margin: 100px auto;
+			text-align: center;
+		}
+		.inputContent input {
+			height: 30px;
+			line-height: 30px;
+		}
+		.tips{
+			width: 30%;
+			background-color: #ccc;
+			color: #fff;
+			margin: 10px auto;
+			border-radius: 5px;
+			height: 20px;
+			line-height: 20px;
+			text-align: center;
+		}
+		.item{
+			/*background-color: #1e90ff;*/
+		}
+		.itemTime{
+			font-size: 12px;
+		}
+		.itemName{
+			width: 40px;
+			height: 40px;
+			border-radius: 40px;
+			border: 1px solid #ccc;
+			text-align: center;
+			line-height: 40px;
+		}
+		.itemContent{
+			padding: 10px 0;
+		}
+		.itemText{
+			padding: 10px;
+			width: 200px;
+			background-color: #1e90ff;
+			color: #fff;
+			border-radius: 10px;
+			position: relative;
+		}
+		.item .itemText{
+			margin-left: 12px;
+		}
+		.item .itemText::before{
+			display: block;
+			content:'';
+			position: absolute;
+			left: -10px;
+			top: 50%;
+			margin-top: -8px;
+			border-right: 16px solid #1e90ff;
+			border-top: 10px solid transparent;
+			border-left: transparent;
+			border-bottom: 10px solid transparent;
+		}
+		.itemMy{
+			text-align: right;
+		}
+		.itemMy .itemText{
+			margin-right: 12px;
+		}
+		.itemMy .itemText::after{
+			display: block;
+			content:'';
+			position: absolute;
+			right: -10px;
+			top: 50%;
+			margin-top: -8px;
+			border-left: 16px solid #1e90ff;
+			border-top: 10px solid transparent;
+			border-right: transparent;
+			border-bottom: 10px solid transparent;
+		}
+	</style>
+</head>
+<body>
+	<div class='wrap'>
+		<div class='content' id="content">
+			<ul>
+			</ul>
+		</div>
+		<div class='operate'>
+			<input type="text" class="inputStyle" id="input">
+			<input type="button" value="发送" class="buttonStyle" onclick="send()">
+			<input type="button" value="退出" class="buttonStyle" onclick="leave()">
+		</div>
+		<div id="pop">
+			<div class="inputContent">昵称:
+			<input type="text" id='name' onkeyup="surename(event)"></div>
+		</div>
+	</div>
+	 <script src="http://cdn.bootcss.com/jquery/2.2.4/jquery.js" ></script>
+	 <script src="/socket.io/socket.io.js"></script>
+	 <script>
+	 	var socket = io();
+	 	var username;
+	 	var sendData = {
+	 		value:'',
+	 		time:'',
+	 		name:''
+	 	}
+
+	 	var $myItem = function(data){
+	 		return $('<li class="itemMy">'+
+					'<p class="itemTime">'+data.time+'</p>'+
+					'<div class="itemContent">'+
+						'<span class="itemText">'+data.value+'</span><span class="itemName">'+data.name+'</span>'+
+					'</div>'+
+				'</li>')
+	 	}
+	 	var $otherItem = function(data){
+	 		return $('<li class="item">'+
+					'<p class="itemTime">'+data.time+'</p>'+
+					'<div class="itemContent">'+
+						'<span class="itemName">'+data.name+'</span><span class="itemText">'+data.value+'</span>'+
+					'</div>'+
+				'</li>')
+	 	}
+	 	var $join = function(data){
+	 		return $('<p class="tips">'+data+'</p>')
+	 	}
+
+	 	socket.on('serverSend',function(data){
+	 		$('#content ul').append($otherItem(data))
+	 	})
+	 	socket.on('serverJoin',function(data){
+	 		$('#content ul').append($join(data))
+	 	})
+
+	 	function send(){
+	 		sendData.value = $('#input').val();
+	 		sendData.time = new Date().toLocaleString();
+	 		sendData.name = username
+	 		socket.emit('messageSend',sendData)
+	 		appendMy()
+	 	}
+
+	 	function surename(event){
+	 		//console.log(socket.readstate)
+	 		username = $('#name').val()
+	 		
+	 		if(event.keyCode == 13){
+	 			if(!username.trim()){
+		 			alert('请输入昵称')
+		 			return;
+		 		}
+	 			socket.emit('join',username)
+	 			$('#pop').hide()
+	 			$('#name').val('')
+	 		}
+	 	}
+
+	 	function leave(){
+	 		socket.emit('close',username)
+	 		$('#content').html('')
+	 		$('#input').val('')
+	 		$('#pop').show()
+	 	}
+
+	 	function appendMy(){
+	 		$('#content').append($myItem(sendData))
+	 	}
+	 </script>
+</body>
+</html>
