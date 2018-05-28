@@ -22,6 +22,7 @@
 		}
 		.content{
 			height: 400px;
+			overflow: auto;
 			/* //border: 1px solid #ccc; */
 		}
 		.operate input[type='text']{
@@ -139,7 +140,7 @@
 	 <script src="http://cdn.bootcss.com/jquery/2.2.4/jquery.js" ></script>
 	 <script src="/socket.io/socket.io.js"></script>
 	 <script>
-	 	var socket = io();
+	 	var socket;
 	 	var username;
 	 	var sendData = {
 	 		value:'',
@@ -167,14 +168,10 @@
 	 		return $('<p class="tips">'+data+'</p>')
 	 	}
 
-	 	socket.on('serverSend',function(data){
-	 		$('#content ul').append($otherItem(data))
-	 	})
-	 	socket.on('serverJoin',function(data){
-	 		$('#content ul').append($join(data))
-	 	})
+	 	
 
 	 	function send(){
+	 		alert(1)
 	 		sendData.value = $('#input').val();
 	 		sendData.time = new Date().toLocaleString();
 	 		sendData.name = username
@@ -191,21 +188,28 @@
 		 			alert('请输入昵称')
 		 			return;
 		 		}
+		 		socket = io();
+		 		socket.on('serverSend',function(data){
+		 			$('#content ul').append($otherItem(data))
+		 		})
+		 		socket.on('serverJoin',function(data){
+		 			$('#content ul').append($join(data))
+		 		})
 	 			socket.emit('join',username)
 	 			$('#pop').hide()
-	 			$('#name').val('')
+	 			$('#name').val('')	 			
 	 		}
 	 	}
 
 	 	function leave(){
 	 		socket.emit('close',username)
-	 		$('#content').html('')
+	 		$('#content ul').html('')
 	 		$('#input').val('')
 	 		$('#pop').show()
 	 	}
 
 	 	function appendMy(){
-	 		$('#content ul`').append($myItem(sendData))
+	 		$('#content ul').append($myItem(sendData))
 	 	}
 	 </script>
 </body>

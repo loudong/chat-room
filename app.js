@@ -22,8 +22,8 @@ io.on('connection',function(socket){
 		socket.broadcast.emit('serverSend',data)  //发送给除了自己以外的所有人
 	})
 	socket.on('close',function(data){
-		socket.disconnect(true)
-		io.emit('serverSend',data+'离开了聊天室')
+		io.emit('serverJoin',data+'离开了聊天室')
+		socket.disconnect(true)	
 	})
 
 })
