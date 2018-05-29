@@ -25,12 +25,21 @@
 			overflow: auto;
 			/* //border: 1px solid #ccc; */
 		}
+		.userList{
+			height: 400px;
+			overflow: auto;
+			/* //border: 1px solid #ccc; */
+		}
+		.operate {
+			display: flex;
+		}
 		.operate input[type='text']{
-			width: 70%;
+			/* width: 70%; */
+			flex-grow: 2;
 			height: 30px;
 		}
 		.operate input[type='button']{
-			width: 28%;
+			width: 100px;
 			height: 30px;
 		}
 		#pop{
@@ -119,18 +128,55 @@
 			border-right: transparent;
 			border-bottom: 10px solid transparent;
 		}
+		.nav li{
+			width: 50%;
+			text-align: center;
+			float: left;
+			font-weight: 600;
+		}
+		.nav li.active{
+			background-color: #1e90ff;
+			color: #fff;
+		}
+		.userList{
+			display: none;
+		}
+		.userList ul{
+			display: inline-flex;
+			flex-wrap: wrap;
+			list-style: none;
+			padding: 10px;
+		}
+		.userList ul li{
+			padding: 5px 15px;
+			background-color: #1e90ff;
+			color: #fff;
+			margin-right: 10px;
+			border-radius: 5px;
+			list-style: none;
+		}
 	</style>
 </head>
 <body>
 	<div class='wrap'>
+		<ul class="nav">
+			<li onclick="showMessage(this)" class="active">消息</li>
+			<li onclick="showMember(this)">成员</li>
+			<br clear="all"/>
+		</ul>
 		<div class='content' id="content">
 			<ul>
 			</ul>
+		</div>
+		<div class="userList" id="userList">
 		</div>
 		<div class='operate'>
 			<input type="text" class="inputStyle" id="input">
 			<input type="button" value="发送" class="buttonStyle" onclick="send()">
 			<input type="button" value="退出" class="buttonStyle" onclick="leave()">
+			<!-- <input type="button" value="进群" class="buttonStyle" onclick="joinList()">
+			<input type="button" value="退群" class="buttonStyle" onclick="leaveList()">
+			<input type="button" value="群内发送" class="buttonStyle" onclick="sendList()"> -->
 		</div>
 		<div id="pop">
 			<div class="inputContent">昵称:
@@ -164,14 +210,30 @@
 					'</div>'+
 				'</li>')
 	 	}
+
+	 	var $userItem = function(data){
+	 		return $('<li>'+data.name+'</li>')
+	 	}
 	 	var $join = function(data){
 	 		return $('<p class="tips">'+data+'</p>')
 	 	}
 
-	 	
+	 	function showMessage(a){
+	 		$('.active').removeClass('active')
+	 		$(a).addClass('active')
+	 		$('#userList').hide();
+	 		$('#content').show();
+	 	}
+
+	 	function showMember(a){
+	 		$('.active').removeClass('active')
+	 		$(a).addClass('active')
+	 		$('#content').hide();
+	 		$('#userList').show();
+	 	}
 
 	 	function send(){
-	 		alert(1)
+	 		/*sendData.value = encodeURI($('#input').val());*/
 	 		sendData.value = $('#input').val();
 	 		sendData.time = new Date().toLocaleString();
 	 		sendData.name = username
@@ -195,15 +257,38 @@
 		 		socket.on('serverJoin',function(data){
 		 			$('#content ul').append($join(data))
 		 		})
+		 		socket.on('showList',function(data){
+		 			var $ul = $('<ul></ul>')
+		 			for(var i = 0;i<data.length;i++){
+		 				$ul.append($userItem(data[i]));
+		 			}
+		 			$('#userList').html($ul)
+		 		})
 	 			socket.emit('join',username)
 	 			$('#pop').hide()
 	 			$('#name').val('')	 			
 	 		}
 	 	}
 
+	 	function joinList(){
+	 		socket.emit('add' ,username)
+	 	}
+
+	 	function leaveList(){
+	 		socket.emit('leave',username)
+	 	}
+
+	 	function sendList(){
+	 		sendData.value = $('#input').val();
+	 		sendData.time = new Date().toLocaleString();
+	 		sendData.name = username
+	 		socket.emit('someMessage',sendData)
+	 	}
 	 	function leave(){
-	 		socket.emit('close',username)
+	 		socket.disconnect(true)
 	 		$('#content ul').html('')
+	 		$('#userList').html('')
+	 		showMessage($('.nav li:first-child'))
 	 		$('#input').val('')
 	 		$('#pop').show()
 	 	}
